@@ -57,7 +57,7 @@ exports.listCmd = rl => {
 
 
 const validaId = id => {
-	return new Promise ( (resolve, reject) => {
+	return new Sequelize.Promise ( (resolve, reject) => {
 		if ( typeof id === "undefined") { reject (new Error (`Falta el paràmetro <id>`))} 
 			else {
 				id = parseInt(id);
@@ -227,18 +227,32 @@ exports.editCmd = (rl, id) => {
 */
 	validaId(id)
 	.then( id => models.quiz.findByPk(id))
-	.then( quiz => { if (!quiz) { throw new (`No existe el quiz asociado al id <id>`);}
-		return quiz ;
-	})
-	.then (  {rl.write(quiz.question)} ;) 
 	.then(quiz =>{
-		 log(` ${colorize('Se ha editado', 'magenta')}: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
+		if (!quiz){
+			throw new (`No existe el quiz asociado al id <id>`);
+		}  
+		process.stdout.isTTY && setTimeout(() => {rl.write(quiz.question)},0);
+		return	HacerPregunta(rl,'Edite pregunta')
+		.then(a => {
+			process.stdout.isTTY && setTimeout(() => {rl.write(quiz.answer)},0);
+			return HacerPregunta(rl,'Introduzca la respuesta')
+			.then(b => {
+				quiz.question = a;
+				quiz.answer = b ;
+				return quiz;
+			});
+		})
+
 	})
-/*
+	.then(quiz => { return quiz.save()  ;
+	})	
+	.then(quiz =>{
+		log(` Se ha cambiado el quiz ${colorize(id, 'magenta')} por: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
+	})
 	.catch(Sequelize.ValidationError, error => {
 		errorlog('El quiz es erroneo')
+		error.errors.forEach(({message}) => errorlog(message)) ;
 	})
-*/
 	.catch(error => {
 		errorlog(error.message)
 	})
