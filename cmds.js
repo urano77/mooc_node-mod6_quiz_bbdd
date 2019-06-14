@@ -375,17 +375,18 @@ exports.playCmd = rl => {
 
 models.quiz.findAll({ attributes: ['id', 'question', 'answer'] })
 		.then(quizzes => { 
+			var pendientes = [] ;
 			quizzes.forEach((quizzes) => {
 			//log(` [${colorize(quizzes.id, 'magenta')}]:  ${quizzes.question}`);
-			log (quizzes.id)
-			var pendientes = [] ;
 			pendientes.push(quizzes.id) ;
-			return pendientes ;
 			})
+			return pendientes ;	
 		})
-		.then( (pendientes)=> { return log(typeof(pendientes))} )
+		.then( (pendientes)=> { return pendientes} )
 		.catch(error =>{errorlog(error.message);})
 		.then( () => {rl.prompt();})
+
+//log(`${pendientes}`);
 
 };
 
