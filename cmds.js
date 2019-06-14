@@ -273,6 +273,34 @@ exports.testCmd = (rl, id) => {
     }
 
 */
+	validaId(id)
+	.then( id => models.quiz.findByPk(id))
+	.then(quiz =>{
+		if (!quiz){
+			throw new (`No existe el quiz asociado al id <id>`);
+		}  
+		return quiz ;
+	})
+	.then( quiz => {
+		log(` [${colorize(quiz.id, 'magenta')}]:  ${quiz.question} `);
+		return	HacerPregunta(rl,'Introduzca la respuesta')
+		.then(a => {
+			if (quiz.answer === a) { return "correcta" } { return "incorrecta"} ;
+		});
+	})	
+	.then( ( valoracion ) =>{
+		log(` La respuesta de ${colorize(id, 'magenta')} :  ${colorize('=>', 'magenta')} ${valoracion} `);
+	})
+	.catch(Sequelize.ValidationError, error => {
+		errorlog('El quiz es erroneo')
+		error.errors.forEach(({message}) => errorlog(message)) ;
+	})
+	.catch(error => {
+		errorlog(error.message)
+	})
+	.then( () => {
+		rl.prompt();
+	});
 
 
 
@@ -286,9 +314,113 @@ exports.testCmd = (rl, id) => {
  * @param rl Objeto readline usado para implementar el CLI.
  */
 exports.playCmd = rl => {
-    log('Jugar.', 'red');
+    log('Jugar', 'red');
+
+/* Anterior implementacion con file
+  // arreglo con total de preguntas
+    var pendientes = []
+     for ( var i = 0; i < model.count(); i++){
+        pendientes.push(model.getByIndex(i))
+    }
+    
+    //log(pendientes)
+
+    let pregunta = 0
+    let aciertos = 0    
+
+    jugar = () => {
+        // genera pregunta
+        if (pendientes.length>0) {
+            pregunta = Math.trunc( Math.random()*pendientes.length ) ;
+            try {
+            const p = pendientes[pregunta];
+            log(` [${colorize(pregunta, 'magenta')}]:  ${p.question} `);
+            rl.question(colorize(' Introduzca su respuesta: ', 'red'), answer => {
+            
+                if ( answer == p.answer ) { 
+                    aciertos++
+                    log(`CORRECTO - Lleva ${aciertos} aciertos.`)
+                    pendientes.splice([pregunta],1)
+                    jugar()
+                } else {
+                    log(`INCORRECTO - Fin de Juego ${aciertos} aciertos.`)
+                    biglog(aciertos)
+                    rl.prompt();
+                }
+            });    
+        } catch(error) {
+            errorlog(error.message);
+            rl.prompt();
+        }
+        
+        } 
+        else {
+            log("Acerto todo")
+            log(aciertos)
+            biglog(aciertos)
+            rl.prompt();
+        }
+        
+        //log(` Usted logró: ${aciertos}  ` )
+     
+    }
+
+    jugar()
     rl.prompt();
 };
+
+*/
+
+
+
+models.quiz.findAll({ attributes: ['id', 'question', 'answer'] })
+		.then(quizzes => { 
+			quizzes.forEach((quizzes) => {
+			//log(` [${colorize(quizzes.id, 'magenta')}]:  ${quizzes.question}`);
+			log (quizzes.id)
+			var pendientes = [] ;
+			pendientes.push(quizzes.id) ;
+			return pendientes ;
+			})
+		})
+		.then( (pendientes)=> { return log(typeof(pendientes))} )
+		.catch(error =>{errorlog(error.message);})
+		.then( () => {rl.prompt();})
+
+};
+
+/*
+	validaId(id)
+	.then( id => models.quiz.findByPk(id))
+	.then(quiz =>{
+		if (!quiz){
+			throw new (`No existe el quiz asociado al id <id>`);
+		}  
+		return quiz ;
+	})
+	.then( quiz => {
+		log(` [${colorize(quiz.id, 'magenta')}]:  ${quiz.question} `);
+		return	HacerPregunta(rl,'Introduzca la respuesta')
+		.then(a => {
+			if (quiz.answer === a) { return "correcta" } { return "incorrecta"} ;
+		});
+	})	
+	.then( ( valoracion ) =>{
+		log(` La respuesta de ${colorize(id, 'magenta')} :  ${colorize('=>', 'magenta')} ${valoracion} `);
+	})
+	.catch(Sequelize.ValidationError, error => {
+		errorlog('El quiz es erroneo')
+		error.errors.forEach(({message}) => errorlog(message)) ;
+	})
+	.catch(error => {
+		errorlog(error.message)
+	})
+	.then( () => {
+		rl.prompt();
+	});
+*/
+
+
 
 
 /**
